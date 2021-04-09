@@ -14,6 +14,12 @@ function chart(canvas, data) {
   canvas.width = DPI_WIDTH;
   canvas.height = DPI_HEIGHT;
 
+  function mousemove() {
+
+  }
+
+  canvas.addEventListener('mousemove', mousemove);
+
   const [yMin, yMax] = computeBoundaries(data);
   const yRatio = VIEW_HEIGHT / (yMax - yMin);
   const xRatio = VIEW_WIDTH / (data.columns[0].length - 2);
@@ -31,6 +37,12 @@ function chart(canvas, data) {
     const color = data.colors[yData[idx][0]];
     line(ctx, coords, {color});
   });
+
+  return {
+    destroy() {
+      canvas.removeEventListener('mousemove', mousemove);
+    }
+  }
 }
 
 function toCoords(xRatio, yRatio) {
