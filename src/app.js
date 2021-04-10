@@ -1,3 +1,5 @@
+import './styles.scss';
+
 const WIDTH = 600;
 const HEIGHT = 200;
 const DPI_WIDTH = WIDTH * 2;
