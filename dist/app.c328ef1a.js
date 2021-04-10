@@ -117,7 +117,411 @@ parcelRequire = (function (modules, cache, entry, globalName) {
   }
 
   return newRequire;
-})({"../node_modules/parcel-bundler/src/builtins/bundle-url.js":[function(require,module,exports) {
+})({"utils.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.toDate = toDate;
+exports.isOver = isOver;
+exports.line = line;
+exports.circle = circle;
+exports.boundaries = boundaries;
+exports.css = css;
+
+function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest(); }
+
+function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+
+function _iterableToArrayLimit(arr, i) { if (typeof Symbol === "undefined" || !(Symbol.iterator in Object(arr))) return; var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"] != null) _i["return"](); } finally { if (_d) throw _e; } } return _arr; }
+
+function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
+
+function _createForOfIteratorHelper(o, allowArrayLike) { var it; if (typeof Symbol === "undefined" || o[Symbol.iterator] == null) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e2) { throw _e2; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = o[Symbol.iterator](); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e3) { didErr = true; err = _e3; }, f: function f() { try { if (!normalCompletion && it.return != null) it.return(); } finally { if (didErr) throw err; } } }; }
+
+function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
+
+function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
+
+function toDate(timestamp) {
+  var shortMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'sep', 'Oct', 'Nov', 'Dec'];
+  var date = new Date(timestamp);
+  return "".concat(shortMonths[date.getMonth()], " ").concat(date.getDate());
+}
+
+;
+
+function isOver(mouse, x, length, dWidth) {
+  if (!mouse) {
+    return false;
+  }
+
+  var width = dWidth / length;
+  return Math.abs(x - mouse.x) < width / 2;
+}
+
+;
+
+function line(ctx, coords, _ref) {
+  var color = _ref.color;
+  ctx.beginPath();
+  ctx.lineWidth = 5;
+  ctx.strokeStyle = color;
+
+  var _iterator = _createForOfIteratorHelper(coords),
+      _step;
+
+  try {
+    for (_iterator.s(); !(_step = _iterator.n()).done;) {
+      var _step$value = _slicedToArray(_step.value, 2),
+          x = _step$value[0],
+          y = _step$value[1];
+
+      ctx.lineTo(x, y);
+    }
+  } catch (err) {
+    _iterator.e(err);
+  } finally {
+    _iterator.f();
+  }
+
+  ctx.stroke();
+  ctx.closePath();
+}
+
+;
+
+function circle(ctx, _ref2, color) {
+  var _ref3 = _slicedToArray(_ref2, 2),
+      x = _ref3[0],
+      y = _ref3[1];
+
+  var CIRCLE_RADIUS = 8;
+  ctx.beginPath();
+  ctx.strokeStyle = color;
+  ctx.fillStyle = '#fff';
+  ctx.arc(x, y, CIRCLE_RADIUS, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+  ctx.closePath();
+}
+
+;
+
+function boundaries(_ref4) {
+  var columns = _ref4.columns,
+      types = _ref4.types;
+  var min;
+  var max;
+  columns.forEach(function (col) {
+    if (types[col[0]] !== 'line') {
+      return;
+    }
+
+    if (typeof min !== 'number') min = col[1];
+    if (typeof max !== 'number') max = col[1];
+    if (min > col[1]) min = col[1];
+    if (max < col[1]) max = col[1];
+
+    for (var i = 2; i < col.length; i++) {
+      if (min > col[i]) min = col[i];
+      if (max < col[i]) max = col[i];
+    }
+  });
+  return [min, max];
+}
+
+;
+
+function css(el) {
+  var styles = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+  Object.assign(el.style, styles);
+}
+},{}],"tooltip.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.tooltip = tooltip;
+
+var _utils = require("./utils");
+
+var template = function template(data) {
+  return "\n    <div class=\"tooltip-title\">".concat(data.title, "</div>\n    <ul class=\"tooltip-list\">\n        ").concat(data.items.map(function (item) {
+    return "<li class=\"tooltip-list-item\">\n            <div class=\"value\" style=\"color: ".concat(item.color, "\">").concat(item.value, "</div>\n            <div class=\"value\" style=\"color: ").concat(item.color, "\">").concat(item.name, "</div>\n            </li>");
+  }).join('\n'), "\n    </ul>\n");
+};
+
+function tooltip(el) {
+  var clear = function clear() {
+    return el.innerHTML = '';
+  };
+
+  return {
+    show: function show(_ref, data) {
+      var left = _ref.left,
+          top = _ref.top;
+
+      var _el$getBoundingClient = el.getBoundingClientRect(),
+          height = _el$getBoundingClient.height,
+          width = _el$getBoundingClient.width;
+
+      clear();
+      (0, _utils.css)(el, {
+        display: 'block',
+        top: top - height + 'px',
+        left: left + width / 2 + 'px'
+      });
+      el.insertAdjacentHTML('afterbegin', template(data));
+    },
+    hide: function hide() {
+      (0, _utils.css)(el, {
+        display: 'none'
+      });
+    }
+  };
+}
+},{"./utils":"utils.js"}],"data.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.getChartData = getChartData;
+
+function getChartData() {
+  return [{
+    columns: [['x', 1542412800000, 1542499200000, 1542585600000, 1542672000000, 1542758400000, 1542844800000, 1542931200000, 1543017600000, 1543104000000, 1543190400000, 1543276800000, 1543363200000, 1543449600000, 1543536000000, 1543622400000, 1543708800000, 1543795200000, 1543881600000, 1543968000000, 1544054400000, 1544140800000, 1544227200000, 1544313600000, 1544400000000, 1544486400000, 1544572800000, 1544659200000, 1544745600000, 1544832000000, 1544918400000, 1545004800000, 1545091200000, 1545177600000, 1545264000000, 1545350400000, 1545436800000, 1545523200000, 1545609600000, 1545696000000, 1545782400000, 1545868800000, 1545955200000, 1546041600000, 1546128000000, 1546214400000, 1546300800000, 1546387200000, 1546473600000, 1546560000000, 1546646400000, 1546732800000, 1546819200000, 1546905600000, 1546992000000, 1547078400000, 1547164800000, 1547251200000, 1547337600000, 1547424000000, 1547510400000, 1547596800000, 1547683200000, 1547769600000, 1547856000000, 1547942400000, 1548028800000, 1548115200000, 1548201600000, 1548288000000, 1548374400000, 1548460800000, 1548547200000, 1548633600000, 1548720000000, 1548806400000, 1548892800000, 1548979200000, 1549065600000, 1549152000000, 1549238400000, 1549324800000, 1549411200000, 1549497600000, 1549584000000, 1549670400000, 1549756800000, 1549843200000, 1549929600000, 1550016000000, 1550102400000, 1550188800000, 1550275200000, 1550361600000, 1550448000000, 1550534400000, 1550620800000, 1550707200000, 1550793600000, 1550880000000, 1550966400000, 1551052800000, 1551139200000, 1551225600000, 1551312000000, 1551398400000, 1551484800000, 1551571200000, 1551657600000, 1551744000000, 1551830400000, 1551916800000, 1552003200000], ['y0', 37, 20, 32, 39, 32, 35, 19, 65, 36, 62, 113, 69, 120, 60, 51, 49, 71, 122, 149, 69, 57, 21, 33, 55, 92, 62, 47, 50, 56, 116, 63, 60, 55, 65, 76, 33, 45, 64, 54, 81, 180, 123, 106, 37, 60, 70, 46, 68, 46, 51, 33, 57, 75, 70, 95, 70, 50, 68, 63, 66, 53, 38, 52, 109, 121, 53, 36, 71, 96, 55, 58, 29, 31, 55, 52, 44, 126, 191, 73, 87, 255, 278, 219, 170, 129, 125, 126, 84, 65, 53, 154, 57, 71, 64, 75, 72, 39, 47, 52, 73, 89, 156, 86, 105, 88, 45, 33, 56, 142, 124, 114, 64], ['y1', 22, 12, 30, 40, 33, 23, 18, 41, 45, 69, 57, 61, 70, 47, 31, 34, 40, 55, 27, 57, 48, 32, 40, 49, 54, 49, 34, 51, 51, 51, 66, 51, 94, 60, 64, 28, 44, 96, 49, 73, 30, 88, 63, 42, 56, 67, 52, 67, 35, 61, 40, 55, 63, 61, 105, 59, 51, 76, 63, 57, 47, 56, 51, 98, 103, 62, 54, 104, 48, 41, 41, 37, 30, 28, 26, 37, 65, 86, 70, 81, 54, 74, 70, 50, 74, 79, 85, 62, 36, 46, 68, 43, 66, 50, 28, 66, 39, 23, 63, 74, 83, 66, 40, 60, 29, 36, 27, 54, 89, 50, 73, 52]],
+    types: {
+      y0: 'line',
+      y1: 'line',
+      x: 'x'
+    },
+    names: {
+      y0: '#0',
+      y1: '#1'
+    },
+    colors: {
+      y0: '#3DC23F',
+      y1: '#F34C44'
+    }
+  }][0];
+}
+},{}],"chart.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.chart = chart;
+
+var _tooltip = require("./tooltip");
+
+var _data = require("./data");
+
+var _utils = require("./utils");
+
+function _createForOfIteratorHelper(o, allowArrayLike) { var it; if (typeof Symbol === "undefined" || o[Symbol.iterator] == null) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e2) { throw _e2; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = o[Symbol.iterator](); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e3) { didErr = true; err = _e3; }, f: function f() { try { if (!normalCompletion && it.return != null) it.return(); } finally { if (didErr) throw err; } } }; }
+
+function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest(); }
+
+function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+
+function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
+
+function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
+
+function _iterableToArrayLimit(arr, i) { if (typeof Symbol === "undefined" || !(Symbol.iterator in Object(arr))) return; var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"] != null) _i["return"](); } finally { if (_d) throw _e; } } return _arr; }
+
+function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
+
+var WIDTH = 600;
+var HEIGHT = 200;
+var DPI_WIDTH = WIDTH * 2;
+var DPI_HEIGHT = HEIGHT * 2;
+var ROWS_COUNT = 5;
+var PADDING = 40;
+var VIEW_HEIGHT = DPI_HEIGHT - PADDING * 2;
+var VIEW_WIDTH = DPI_WIDTH;
+
+function chart(root, data) {
+  var canvas = root.querySelector('canvas');
+  var ctx = canvas.getContext('2d');
+  var tip = (0, _tooltip.tooltip)(root.querySelector('[data-el="tooltip"]'));
+  var raf;
+  canvas.width = DPI_WIDTH;
+  canvas.height = DPI_HEIGHT;
+  (0, _utils.css)(canvas, {
+    width: WIDTH + 'px',
+    height: HEIGHT + 'px'
+  });
+  var proxy = new Proxy({}, {
+    set: function set() {
+      var result = Reflect.set.apply(Reflect, arguments);
+      raf = requestAnimationFrame(paint);
+      return result;
+    }
+  });
+
+  function mousemove(_ref) {
+    var clientX = _ref.clientX,
+        clientY = _ref.clientY;
+
+    var _canvas$getBoundingCl = canvas.getBoundingClientRect(),
+        left = _canvas$getBoundingCl.left,
+        top = _canvas$getBoundingCl.top;
+
+    proxy.mouse = {
+      x: (clientX - left) * 2,
+      tooltip: {
+        left: clientX - left,
+        top: clientY - top
+      }
+    };
+  }
+
+  function mouseleave() {
+    proxy.mouse = null;
+    tip.hide();
+  }
+
+  canvas.addEventListener('mousemove', mousemove);
+  canvas.addEventListener('mouseleave', mouseleave);
+
+  function clear() {
+    ctx.clearRect(0, 0, DPI_WIDTH, DPI_HEIGHT);
+  }
+
+  function paint() {
+    clear();
+
+    var _boundaries = (0, _utils.boundaries)(data),
+        _boundaries2 = _slicedToArray(_boundaries, 2),
+        yMin = _boundaries2[0],
+        yMax = _boundaries2[1];
+
+    var yRatio = VIEW_HEIGHT / (yMax - yMin);
+    var xRatio = VIEW_WIDTH / (data.columns[0].length - 2);
+    var yData = data.columns.filter(function (col) {
+      return data.types[col[0]] === 'line';
+    });
+    var xData = data.columns.filter(function (col) {
+      return data.types[col[0]] === 'x';
+    })[0];
+    yAxis(yMin, yMax);
+    xAxis(xData, yData, xRatio);
+    yData.map(toCoords(xRatio, yRatio)).forEach(function (coords, idx) {
+      var color = data.colors[yData[idx][0]];
+      (0, _utils.line)(ctx, coords, {
+        color: color
+      });
+
+      var _iterator = _createForOfIteratorHelper(coords),
+          _step;
+
+      try {
+        for (_iterator.s(); !(_step = _iterator.n()).done;) {
+          var _step$value = _slicedToArray(_step.value, 2),
+              x = _step$value[0],
+              y = _step$value[1];
+
+          if ((0, _utils.isOver)(proxy.mouse, x, coords.length, DPI_WIDTH)) {
+            (0, _utils.circle)(ctx, [x, y], color);
+            break;
+          }
+        }
+      } catch (err) {
+        _iterator.e(err);
+      } finally {
+        _iterator.f();
+      }
+    });
+  }
+
+  function xAxis(xData, yData, xRatio) {
+    var colsCount = 6;
+    var step = Math.round(xData.length / colsCount);
+    ctx.beginPath();
+
+    var _loop = function _loop(i) {
+      var x = i * xRatio;
+
+      if ((i - 1) % step === 0) {
+        var text = (0, _utils.toDate)(xData[i]);
+        ctx.fillText(text.toString(), x, DPI_HEIGHT - 10);
+      }
+
+      if ((0, _utils.isOver)(proxy.mouse, x, xData.length, DPI_WIDTH)) {
+        ctx.save();
+        ctx.moveTo(x, PADDING / 2);
+        ctx.lineTo(x, DPI_HEIGHT - PADDING);
+        ctx.restore();
+        tip.show(proxy.mouse.tooltip, {
+          title: (0, _utils.toDate)(xData[i]),
+          items: yData.map(function (col) {
+            return {
+              color: data.colors[col[0]],
+              name: data.names[col[0]],
+              value: col[i + 1]
+            };
+          })
+        });
+      }
+    };
+
+    for (var i = 1; i < xData.length; i++) {
+      _loop(i);
+    }
+
+    ctx.stroke();
+    ctx.closePath();
+  }
+
+  function yAxis(yMin, yMax) {
+    var step = VIEW_HEIGHT / ROWS_COUNT;
+    var stepText = (yMax - yMin) / ROWS_COUNT;
+    ctx.beginPath();
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = '#bbb';
+    ctx.font = 'normal 20px Helvetica, sans-serif';
+    ctx.fillStyle = '#96a2aa';
+
+    for (var i = 1; i <= ROWS_COUNT; i++) {
+      var y = step * i;
+      var text = Math.round(yMax - stepText * i);
+      ctx.fillText(text.toString(), 5, y + PADDING - 10);
+      ctx.moveTo(0, y + PADDING);
+      ctx.lineTo(DPI_WIDTH, y + PADDING);
+    }
+
+    ctx.stroke();
+    ctx.closePath();
+  }
+
+  return {
+    init: function init() {
+      paint();
+    },
+    destroy: function destroy() {
+      cancelAnimationFrame(raf);
+      canvas.removeEventListener('mousemove', mousemove);
+      canvas.removeEventListener('mouseleave', mouseleave);
+    }
+  };
+}
+
+function toCoords(xRatio, yRatio) {
+  return function (col) {
+    return col.map(function (y, i) {
+      return [Math.floor((i - 1) * xRatio), Math.floor(DPI_HEIGHT - PADDING - y * yRatio)];
+    }).filter(function (_, i) {
+      return i !== 0;
+    });
+  };
+}
+},{"./tooltip":"tooltip.js","./data":"data.js","./utils":"utils.js"}],"../node_modules/parcel-bundler/src/builtins/bundle-url.js":[function(require,module,exports) {
 var bundleURL = null;
 
 function getBundleURLCached() {
@@ -192,285 +596,15 @@ module.hot.accept(reloadCSS);
 },{"_css_loader":"../node_modules/parcel-bundler/src/builtins/css-loader.js"}],"app.js":[function(require,module,exports) {
 "use strict";
 
+var _chart = require("./chart");
+
+var _data = require("./data");
+
 require("./styles.scss");
 
-function _createForOfIteratorHelper(o, allowArrayLike) { var it; if (typeof Symbol === "undefined" || o[Symbol.iterator] == null) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e2) { throw _e2; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = o[Symbol.iterator](); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e3) { didErr = true; err = _e3; }, f: function f() { try { if (!normalCompletion && it.return != null) it.return(); } finally { if (didErr) throw err; } } }; }
-
-function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest(); }
-
-function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
-
-function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
-
-function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
-
-function _iterableToArrayLimit(arr, i) { if (typeof Symbol === "undefined" || !(Symbol.iterator in Object(arr))) return; var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"] != null) _i["return"](); } finally { if (_d) throw _e; } } return _arr; }
-
-function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
-
-var WIDTH = 600;
-var HEIGHT = 200;
-var DPI_WIDTH = WIDTH * 2;
-var DPI_HEIGHT = HEIGHT * 2;
-var ROWS_COUNT = 5;
-var PADDING = 40;
-var VIEW_HEIGHT = DPI_HEIGHT - PADDING * 2;
-var VIEW_WIDTH = DPI_WIDTH;
-var CIRCLE_RADIUS = 8;
-var tgChart = chart(document.getElementById('chart'), getChartData());
+var tgChart = (0, _chart.chart)(document.getElementById('chart'), (0, _data.getChartData)());
 tgChart.init();
-
-function chart(canvas, data) {
-  var ctx = canvas.getContext('2d');
-  var raf;
-  canvas.style.width = WIDTH + 'px';
-  canvas.style.height = HEIGHT + 'px';
-  canvas.width = DPI_WIDTH;
-  canvas.height = DPI_HEIGHT;
-  var proxy = new Proxy({}, {
-    set: function set() {
-      var result = Reflect.set.apply(Reflect, arguments);
-      raf = requestAnimationFrame(paint);
-      return result;
-    }
-  });
-
-  function mousemove(_ref) {
-    var clientX = _ref.clientX,
-        clientY = _ref.clientY;
-
-    var _canvas$getBoundingCl = canvas.getBoundingClientRect(),
-        left = _canvas$getBoundingCl.left;
-
-    proxy.mouse = {
-      x: (clientX - left) * 2
-    };
-  }
-
-  function mouseleave() {
-    proxy.mouse = null;
-  }
-
-  canvas.addEventListener('mousemove', mousemove);
-  canvas.addEventListener('mouseleave', mouseleave);
-
-  function clear() {
-    ctx.clearRect(0, 0, DPI_WIDTH, DPI_HEIGHT);
-  }
-
-  function paint() {
-    clear();
-
-    var _computeBoundaries = computeBoundaries(data),
-        _computeBoundaries2 = _slicedToArray(_computeBoundaries, 2),
-        yMin = _computeBoundaries2[0],
-        yMax = _computeBoundaries2[1];
-
-    var yRatio = VIEW_HEIGHT / (yMax - yMin);
-    var xRatio = VIEW_WIDTH / (data.columns[0].length - 2);
-    var yData = data.columns.filter(function (col) {
-      return data.types[col[0]] === 'line';
-    });
-    var xData = data.columns.filter(function (col) {
-      return data.types[col[0]] === 'x';
-    })[0];
-    yAxis(ctx, yMin, yMax);
-    xAxis(ctx, xData, xRatio, proxy);
-    yData.map(toCoords(xRatio, yRatio)).forEach(function (coords, idx) {
-      var color = data.colors[yData[idx][0]];
-      line(ctx, coords, {
-        color: color
-      });
-
-      var _iterator = _createForOfIteratorHelper(coords),
-          _step;
-
-      try {
-        for (_iterator.s(); !(_step = _iterator.n()).done;) {
-          var _step$value = _slicedToArray(_step.value, 2),
-              x = _step$value[0],
-              y = _step$value[1];
-
-          if (isOver(proxy.mouse, x, coords.length)) {
-            circle(ctx, [x, y], color);
-            break;
-          }
-        }
-      } catch (err) {
-        _iterator.e(err);
-      } finally {
-        _iterator.f();
-      }
-    });
-  }
-
-  return {
-    init: function init() {
-      paint();
-    },
-    destroy: function destroy() {
-      cancelAnimationFrame(raf);
-      canvas.removeEventListener('mousemove', mousemove);
-      canvas.removeEventListener('mouseleave', mouseleave);
-    }
-  };
-}
-
-function toCoords(xRatio, yRatio) {
-  return function (col) {
-    return col.map(function (y, i) {
-      return [Math.floor((i - 1) * xRatio), Math.floor(DPI_HEIGHT - PADDING - y * yRatio)];
-    }).filter(function (_, i) {
-      return i !== 0;
-    });
-  };
-}
-
-function yAxis(ctx, yMin, yMax) {
-  var step = VIEW_HEIGHT / ROWS_COUNT;
-  var stepText = (yMax - yMin) / ROWS_COUNT;
-  ctx.beginPath();
-  ctx.lineWidth = 1;
-  ctx.strokeStyle = '#bbb';
-  ctx.font = 'normal 20px Helvetica, sans-serif';
-  ctx.fillStyle = '#96a2aa';
-
-  for (var i = 1; i <= ROWS_COUNT; i++) {
-    var y = step * i;
-    var text = Math.round(yMax - stepText * i);
-    ctx.fillText(text.toString(), 5, y + PADDING - 10);
-    ctx.moveTo(0, y + PADDING);
-    ctx.lineTo(DPI_WIDTH, y + PADDING);
-  }
-
-  ctx.stroke();
-  ctx.closePath();
-}
-
-function xAxis(ctx, data, xRatio, _ref2) {
-  var mouse = _ref2.mouse;
-  var colsCount = 6;
-  var step = Math.round(data.length / colsCount);
-  ctx.beginPath();
-
-  for (var i = 1; i < data.length; i++) {
-    var x = i * xRatio;
-
-    if ((i - 1) % step === 0) {
-      var text = toDate(data[i]);
-      ctx.fillText(text.toString(), x, DPI_HEIGHT - 10);
-    }
-
-    if (isOver(mouse, x, data.length)) {
-      ctx.save();
-      ctx.moveTo(x, PADDING / 2);
-      ctx.lineTo(x, DPI_HEIGHT - PADDING);
-      ctx.restore();
-    }
-  }
-
-  ctx.stroke();
-  ctx.closePath();
-}
-
-function line(ctx, coords, _ref3) {
-  var color = _ref3.color;
-  ctx.beginPath();
-  ctx.lineWidth = 5;
-  ctx.strokeStyle = color;
-
-  var _iterator2 = _createForOfIteratorHelper(coords),
-      _step2;
-
-  try {
-    for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
-      var _step2$value = _slicedToArray(_step2.value, 2),
-          x = _step2$value[0],
-          y = _step2$value[1];
-
-      ctx.lineTo(x, y);
-    }
-  } catch (err) {
-    _iterator2.e(err);
-  } finally {
-    _iterator2.f();
-  }
-
-  ctx.stroke();
-  ctx.closePath();
-}
-
-function computeBoundaries(_ref4) {
-  var columns = _ref4.columns,
-      types = _ref4.types;
-  var min;
-  var max;
-  columns.forEach(function (col) {
-    if (types[col[0]] !== 'line') {
-      return;
-    }
-
-    if (typeof min !== 'number') min = col[1];
-    if (typeof max !== 'number') max = col[1];
-    if (min > col[1]) min = col[1];
-    if (max < col[1]) max = col[1];
-
-    for (var i = 2; i < col.length; i++) {
-      if (min > col[i]) min = col[i];
-      if (max < col[i]) max = col[i];
-    }
-  });
-  return [min, max];
-}
-
-function getChartData() {
-  return [{
-    columns: [['x', 1542412800000, 1542499200000, 1542585600000, 1542672000000, 1542758400000, 1542844800000, 1542931200000, 1543017600000, 1543104000000, 1543190400000, 1543276800000, 1543363200000, 1543449600000, 1543536000000, 1543622400000, 1543708800000, 1543795200000, 1543881600000, 1543968000000, 1544054400000, 1544140800000, 1544227200000, 1544313600000, 1544400000000, 1544486400000, 1544572800000, 1544659200000, 1544745600000, 1544832000000, 1544918400000, 1545004800000, 1545091200000, 1545177600000, 1545264000000, 1545350400000, 1545436800000, 1545523200000, 1545609600000, 1545696000000, 1545782400000, 1545868800000, 1545955200000, 1546041600000, 1546128000000, 1546214400000, 1546300800000, 1546387200000, 1546473600000, 1546560000000, 1546646400000, 1546732800000, 1546819200000, 1546905600000, 1546992000000, 1547078400000, 1547164800000, 1547251200000, 1547337600000, 1547424000000, 1547510400000, 1547596800000, 1547683200000, 1547769600000, 1547856000000, 1547942400000, 1548028800000, 1548115200000, 1548201600000, 1548288000000, 1548374400000, 1548460800000, 1548547200000, 1548633600000, 1548720000000, 1548806400000, 1548892800000, 1548979200000, 1549065600000, 1549152000000, 1549238400000, 1549324800000, 1549411200000, 1549497600000, 1549584000000, 1549670400000, 1549756800000, 1549843200000, 1549929600000, 1550016000000, 1550102400000, 1550188800000, 1550275200000, 1550361600000, 1550448000000, 1550534400000, 1550620800000, 1550707200000, 1550793600000, 1550880000000, 1550966400000, 1551052800000, 1551139200000, 1551225600000, 1551312000000, 1551398400000, 1551484800000, 1551571200000, 1551657600000, 1551744000000, 1551830400000, 1551916800000, 1552003200000], ['y0', 37, 20, 32, 39, 32, 35, 19, 65, 36, 62, 113, 69, 120, 60, 51, 49, 71, 122, 149, 69, 57, 21, 33, 55, 92, 62, 47, 50, 56, 116, 63, 60, 55, 65, 76, 33, 45, 64, 54, 81, 180, 123, 106, 37, 60, 70, 46, 68, 46, 51, 33, 57, 75, 70, 95, 70, 50, 68, 63, 66, 53, 38, 52, 109, 121, 53, 36, 71, 96, 55, 58, 29, 31, 55, 52, 44, 126, 191, 73, 87, 255, 278, 219, 170, 129, 125, 126, 84, 65, 53, 154, 57, 71, 64, 75, 72, 39, 47, 52, 73, 89, 156, 86, 105, 88, 45, 33, 56, 142, 124, 114, 64], ['y1', 22, 12, 30, 40, 33, 23, 18, 41, 45, 69, 57, 61, 70, 47, 31, 34, 40, 55, 27, 57, 48, 32, 40, 49, 54, 49, 34, 51, 51, 51, 66, 51, 94, 60, 64, 28, 44, 96, 49, 73, 30, 88, 63, 42, 56, 67, 52, 67, 35, 61, 40, 55, 63, 61, 105, 59, 51, 76, 63, 57, 47, 56, 51, 98, 103, 62, 54, 104, 48, 41, 41, 37, 30, 28, 26, 37, 65, 86, 70, 81, 54, 74, 70, 50, 74, 79, 85, 62, 36, 46, 68, 43, 66, 50, 28, 66, 39, 23, 63, 74, 83, 66, 40, 60, 29, 36, 27, 54, 89, 50, 73, 52]],
-    types: {
-      y0: 'line',
-      y1: 'line',
-      x: 'x'
-    },
-    names: {
-      y0: '#0',
-      y1: '#1'
-    },
-    colors: {
-      y0: '#3DC23F',
-      y1: '#F34C44'
-    }
-  }][0];
-}
-
-function toDate(timestamp) {
-  var shortMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'sep', 'Oct', 'Nov', 'Dec'];
-  var date = new Date(timestamp);
-  return "".concat(shortMonths[date.getMonth()], " ").concat(date.getDate());
-}
-
-function isOver(mouse, x, length) {
-  if (!mouse) {
-    return false;
-  }
-
-  var width = DPI_WIDTH / length;
-  return Math.abs(x - mouse.x) < width / 2;
-}
-
-function circle(ctx, _ref5, color) {
-  var _ref6 = _slicedToArray(_ref5, 2),
-      x = _ref6[0],
-      y = _ref6[1];
-
-  ctx.beginPath();
-  ctx.strokeStyle = color;
-  ctx.fillStyle = '#fff';
-  ctx.arc(x, y, CIRCLE_RADIUS, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.stroke();
-  ctx.closePath();
-}
-},{"./styles.scss":"styles.scss"}],"../node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
+},{"./chart":"chart.js","./data":"data.js","./styles.scss":"styles.scss"}],"../node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
 var OldModule = module.bundle.Module;
@@ -498,7 +632,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "52339" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "54495" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
